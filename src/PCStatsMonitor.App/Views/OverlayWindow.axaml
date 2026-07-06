@@ -1,0 +1,111 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="PCStatsMonitor.App.Views.OverlayWindow"
+        Title="PC Stats Overlay"
+        SystemDecorations="None"
+        TransparencyLevelHint="Transparent"
+        Background="Transparent"
+        Topmost="True"
+        CanResize="False"
+        ShowInTaskbar="False"
+        ShowActivated="False"
+        SizeToContent="WidthAndHeight"
+        FontFamily="Inter, Segoe UI">
+
+  <!-- Horizontal HUD pill. Same design tokens as the main window, higher opacity
+       so it stays readable over any background. LayoutTransformControl scales the
+       whole pill per the OverlaySize setting (set from code-behind).
+       Icons: every Path draws on a FIXED 16x16 canvas (Stretch=None) with its
+       visual center at y=8, wrapped in a Viewbox that ApplyStyle sizes — this
+       keeps all four icons identically scaled and vertically centered, which
+       Stretch=Uniform could not (different path bounding boxes). -->
+  <LayoutTransformControl Name="RootScale">
+  <Border Name="Plate" Background="#E60D0D0F"
+          BorderBrush="#26FFFFFF"
+          BorderThickness="1"
+          CornerRadius="99"
+          Padding="11,5">
+    <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+
+      <StackPanel Name="FpsGroup" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+        <!-- speedometer: dial arc + needle; spans y ~3.5..12.5, center 8 -->
+        <Viewbox Name="FpsIconBox" IsVisible="False" Width="13" Height="13"
+                 VerticalAlignment="Center">
+          <Path Data="M2,11.5 A6.2,6.2 0 0 1 14,11.5 M8,11.5 L11.2,6.5"
+                Stroke="#FFFFFF" StrokeThickness="1.2" StrokeJoin="Round" StrokeLineCap="Round"
+                Width="16" Height="16" Stretch="None"/>
+        </Viewbox>
+        <TextBlock Name="FpsLabel" Text="FPS" FontSize="8" FontWeight="Medium" LetterSpacing="0.8"
+                   Foreground="#FFFFFF" VerticalAlignment="Center" Margin="0,1,0,0"/>
+        <TextBlock Name="FpsText" Text="—" FontSize="10.5" MinWidth="30"
+                   FontWeight="SemiBold" Foreground="#FFFFFF" VerticalAlignment="Center"/>
+      </StackPanel>
+
+      <Border Name="Sep0" Width="1" Height="10" Background="#1FFFFFFF"/>
+
+      <StackPanel Name="CpuGroup" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+        <!-- chip: frame + core + pins; spans 1.5..14.5 both axes, center 8 -->
+        <Viewbox Name="CpuIconBox" IsVisible="False" Width="13" Height="13"
+                 VerticalAlignment="Center">
+          <Path Data="M4,4 H12 V12 H4 Z M6.5,6.5 H9.5 V9.5 H6.5 Z M6,1.5 V4 M10,1.5 V4 M6,12 V14.5 M10,12 V14.5 M1.5,6 H4 M1.5,10 H4 M12,6 H14.5 M12,10 H14.5"
+                Stroke="#FFFFFF" StrokeThickness="1.2" StrokeJoin="Round" StrokeLineCap="Round"
+                Width="16" Height="16" Stretch="None"/>
+        </Viewbox>
+        <TextBlock Name="CpuLabel" Text="CPU" FontSize="8" FontWeight="Medium" LetterSpacing="0.8"
+                   Foreground="#FFFFFF" VerticalAlignment="Center" Margin="0,1,0,0"/>
+        <TextBlock Name="CpuText" Text="—" FontSize="10.5" MinWidth="56"
+                   FontWeight="SemiBold" Foreground="#FFFFFF" VerticalAlignment="Center"/>
+      </StackPanel>
+
+      <Border Name="Sep1" Width="1" Height="10" Background="#1FFFFFFF"/>
+
+      <StackPanel Name="GpuGroup" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+        <!-- graphics card: board + fan + bracket pins; spans y 3.25..12.75, center 8 -->
+        <Viewbox Name="GpuIconBox" IsVisible="False" Width="13" Height="13"
+                 VerticalAlignment="Center">
+          <Path Data="M1.5,3.25 H14.5 V10.75 H1.5 Z M6,7 A2.2,2.2 0 1 0 10.4,7 A2.2,2.2 0 1 0 6,7 M3.5,10.75 V12.75 M11,10.75 V12.75"
+                Stroke="#FFFFFF" StrokeThickness="1.2" StrokeJoin="Round" StrokeLineCap="Round"
+                Width="16" Height="16" Stretch="None"/>
+        </Viewbox>
+        <TextBlock Name="GpuLabel" Text="GPU" FontSize="8" FontWeight="Medium" LetterSpacing="0.8"
+                   Foreground="#FFFFFF" VerticalAlignment="Center" Margin="0,1,0,0"/>
+        <TextBlock Name="GpuText" Text="—" FontSize="10.5" MinWidth="56"
+                   FontWeight="SemiBold" Foreground="#FFFFFF" VerticalAlignment="Center"/>
+      </StackPanel>
+
+      <Border Name="Sep2" Width="1" Height="10" Background="#1FFFFFFF"/>
+
+      <StackPanel Name="RamGroup" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+        <!-- memory stick: body + chips + pins; spans y 4..12, center 8 -->
+        <Viewbox Name="RamIconBox" IsVisible="False" Width="13" Height="13"
+                 VerticalAlignment="Center">
+          <Path Data="M1.5,4 H14.5 V10 H1.5 Z M5.5,4 V10 M8.5,4 V10 M11.5,4 V10 M3.5,10 V12 M6.5,10 V12 M9.5,10 V12 M12.5,10 V12"
+                Stroke="#FFFFFF" StrokeThickness="1.2" StrokeJoin="Round" StrokeLineCap="Round"
+                Width="16" Height="16" Stretch="None"/>
+        </Viewbox>
+        <TextBlock Name="RamLabel" Text="RAM" FontSize="8" FontWeight="Medium" LetterSpacing="0.8"
+                   Foreground="#FFFFFF" VerticalAlignment="Center" Margin="0,1,0,0"/>
+        <TextBlock Name="RamText" Text="—" FontSize="10.5" MinWidth="70"
+                   FontWeight="SemiBold" Foreground="#FFFFFF" VerticalAlignment="Center"/>
+      </StackPanel>
+
+      <Border Name="Sep3" Width="1" Height="10" Background="#1FFFFFFF"/>
+
+      <StackPanel Name="DiskGroup" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+        <!-- ssd: body + connector slot + indicator; spans y 4.5..11.5, center 8 -->
+        <Viewbox Name="DiskIconBox" IsVisible="False" Width="13" Height="13"
+                 VerticalAlignment="Center">
+          <Path Data="M1.5,4.5 H14.5 V11.5 H1.5 Z M3.5,8 H7.5 M10.5,7 H12.5 V9 H10.5 Z"
+                Stroke="#FFFFFF" StrokeThickness="1.2" StrokeJoin="Round" StrokeLineCap="Round"
+                Width="16" Height="16" Stretch="None"/>
+        </Viewbox>
+        <TextBlock Name="DiskLabel" Text="DISK" FontSize="8" FontWeight="Medium" LetterSpacing="0.8"
+                   Foreground="#FFFFFF" VerticalAlignment="Center" Margin="0,1,0,0"/>
+        <TextBlock Name="DiskText" Text="—" FontSize="10.5" MinWidth="56"
+                   FontWeight="SemiBold" Foreground="#FFFFFF" VerticalAlignment="Center"/>
+      </StackPanel>
+
+    </StackPanel>
+  </Border>
+  </LayoutTransformControl>
+</Window>

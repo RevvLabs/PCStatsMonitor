@@ -1,0 +1,360 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:PCStatsMonitor.App.ViewModels"
+        xmlns:views="clr-namespace:PCStatsMonitor.App.Views"
+        x:Class="PCStatsMonitor.App.Views.MainWindow"
+        x:DataType="vm:MainViewModel"
+        Title="PC Stats Monitor"
+        Width="700" Height="460"
+        WindowStartupLocation="CenterScreen"
+        Background="#0F0F10"
+        FontFamily="Inter, Segoe UI"
+        CanResize="False"
+        RenderOptions.EdgeMode="Antialias"
+        UseLayoutRounding="True">
+
+  <Panel>
+
+    <DockPanel>
+
+      <!-- Header bar — flat, hairline divider only -->
+      <Border DockPanel.Dock="Top"
+              Height="50"
+              BorderBrush="#1F2023"
+              BorderThickness="0,0,0,1">
+        <Grid ColumnDefinitions="*,Auto,Auto" Margin="22,0,16,0">
+
+          <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10"
+                      VerticalAlignment="Center">
+            <TextBlock Text="PC STATS"
+                       FontSize="12" FontWeight="Bold"
+                       LetterSpacing="2.5"
+                       Foreground="#ECEDEF"
+                       VerticalAlignment="Center"/>
+            <TextBlock Text="MONITOR"
+                       FontSize="12" FontWeight="Normal"
+                       LetterSpacing="2.5"
+                       Foreground="#6E7176"
+                       VerticalAlignment="Center"/>
+          </StackPanel>
+
+          <!-- Live indicator -->
+          <StackPanel Grid.Column="1"
+                      Orientation="Horizontal"
+                      VerticalAlignment="Center"
+                      Spacing="7">
+            <Ellipse Name="LiveDot" Width="6" Height="6" Fill="#2ECC71"/>
+            <TextBlock Text="LIVE"
+                       FontSize="9" FontWeight="SemiBold"
+                       LetterSpacing="1.5"
+                       Foreground="#6E7176"
+                       VerticalAlignment="Center"/>
+          </StackPanel>
+
+          <!-- Settings gear -->
+          <Button Grid.Column="2"
+                  Name="SettingsButton"
+                  Click="OnSettingsClick"
+                  Background="Transparent"
+                  BorderThickness="0"
+                  Padding="8,4"
+                  Margin="14,0,0,0"
+                  CornerRadius="6"
+                  VerticalAlignment="Center"
+                  ToolTip.Tip="Settings">
+            <Button.Styles>
+              <Style Selector="Button:pointerover /template/ ContentPresenter">
+                <Setter Property="Background" Value="#1C1D20"/>
+              </Style>
+            </Button.Styles>
+            <TextBlock Text="⚙" FontSize="15" Foreground="#9A9DA3"/>
+          </Button>
+
+        </Grid>
+      </Border>
+
+      <!-- 2×2 grid of stat panels -->
+      <Grid RowDefinitions="*,*" ColumnDefinitions="*,*" Margin="8">
+
+        <!-- Tag carries hex accent color string; CircularGauge parses it via converter.
+             Palette validated for the dark surface (OKLCH band, ≥3:1 contrast, CVD-safe
+             for all grid-adjacent pairs; re-validated vs #17181A 2026-07-05):
+             blue / magenta / aqua / yellow. -->
+        <views:StatPanelView Name="CpuPanel" Grid.Row="0" Grid.Column="0"
+                             DataContext="{CompiledBinding Cpu}"
+                             Tag="3987E5"/>
+
+        <views:StatPanelView Name="GpuPanel" Grid.Row="0" Grid.Column="1"
+                             DataContext="{CompiledBinding Gpu}"
+                             Tag="D55181"/>
+
+        <views:StatPanelView Name="MemPanel" Grid.Row="1" Grid.Column="0"
+                             DataContext="{CompiledBinding Memory}"
+                             Tag="199E70"/>
+
+        <views:StatPanelView Name="StoPanel" Grid.Row="1" Grid.Column="1"
+                             DataContext="{CompiledBinding Storage}"
+                             Tag="C98500"/>
+
+      </Grid>
+    </DockPanel>
+
+    <!-- First-close prompt overlay. ZIndex above the settings page so closing
+         from either the dashboard OR the settings view shows the prompt. -->
+    <Border Name="ClosePromptOverlay"
+            IsVisible="False"
+            ZIndex="10"
+            Background="#CC0B0B0C">
+      <Border Background="#17181A"
+              BorderBrush="#2A2B2F"
+              BorderThickness="1"
+              CornerRadius="14"
+              Padding="28,24"
+              MaxWidth="420"
+              HorizontalAlignment="Center"
+              VerticalAlignment="Center">
+        <StackPanel Spacing="14">
+          <TextBlock Text="Keep monitoring in the background?"
+                     FontSize="15" FontWeight="SemiBold" Foreground="#ECEDEF"/>
+          <TextBlock Text="Choose what the close button should do. You can change this anytime from the ⚙ settings."
+                     FontSize="12" Foreground="#9A9DA3" TextWrapping="Wrap"/>
+          <CheckBox Name="RememberChoiceCheck" IsChecked="True"
+                    Foreground="#9A9DA3" FontSize="12"
+                    Content="Remember my choice"/>
+          <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
+            <Button Name="PromptTrayButton" Click="OnPromptTrayClick"
+                    Background="#2A5A9E" Foreground="#ECEDEF" Padding="14,8" CornerRadius="8">
+              <TextBlock Text="Minimize to tray" FontSize="12"/>
+            </Button>
+            <Button Name="PromptExitButton" Click="OnPromptExitClick"
+                    Background="#242528" Foreground="#ECEDEF" Padding="14,8" CornerRadius="8">
+              <TextBlock Text="Close app" FontSize="12"/>
+            </Button>
+          </StackPanel>
+        </StackPanel>
+      </Border>
+    </Border>
+
+    <!-- Settings page — full-window takeover, sectioned cards, live preview -->
+    <Border Name="SettingsOverlay"
+            IsVisible="False"
+            Background="#0F0F10">
+      <DockPanel>
+
+        <!-- Settings header -->
+        <Border DockPanel.Dock="Top" Height="50"
+                BorderBrush="#1F2023" BorderThickness="0,0,0,1">
+          <Grid ColumnDefinitions="Auto,Auto,*,Auto" Margin="16,0,22,0">
+            <Button Grid.Column="0" Name="SettingsDoneButton" Click="OnSettingsDoneClick"
+                    Background="Transparent" BorderThickness="0" Padding="10,6"
+                    CornerRadius="8" VerticalAlignment="Center">
+              <Button.Styles>
+                <Style Selector="Button:pointerover /template/ ContentPresenter">
+                  <Setter Property="Background" Value="#1C1D20"/>
+                </Style>
+              </Button.Styles>
+              <TextBlock Text="←" FontSize="17" Foreground="#ECEDEF"/>
+            </Button>
+            <TextBlock Grid.Column="1" Text="Settings" FontSize="15" FontWeight="SemiBold"
+                       Foreground="#ECEDEF" VerticalAlignment="Center" Margin="10,0,0,0"/>
+            <TextBlock Grid.Column="3" Text="changes apply instantly"
+                       FontSize="10" Foreground="#6E7176" VerticalAlignment="Center"/>
+          </Grid>
+        </Border>
+
+        <Grid ColumnDefinitions="*,*" Margin="14,10">
+
+          <!-- Left column: General + Overlay content -->
+          <StackPanel Grid.Column="0" Spacing="10" Margin="0,0,5,0">
+
+            <Border Background="#17181A" BorderBrush="#232428" BorderThickness="1"
+                    CornerRadius="12" Padding="14,10">
+              <StackPanel Spacing="7">
+                <TextBlock Text="WHEN I CLOSE THE WINDOW" FontSize="10" FontWeight="SemiBold"
+                           LetterSpacing="1.2" Foreground="#6E7176"/>
+                <WrapPanel>
+                  <RadioButton Name="SettingTrayRadio" GroupName="CloseBehavior"
+                               Foreground="#DFE0E3" FontSize="12" Margin="0,0,10,0"
+                               Content="Minimize to tray"/>
+                  <RadioButton Name="SettingExitRadio" GroupName="CloseBehavior"
+                               Foreground="#DFE0E3" FontSize="12" Margin="0,0,10,0"
+                               Content="Close completely"/>
+                  <RadioButton Name="SettingAskRadio" GroupName="CloseBehavior"
+                               Foreground="#DFE0E3" FontSize="12"
+                               Content="Ask every time"/>
+                </WrapPanel>
+              </StackPanel>
+            </Border>
+
+            <Border Background="#17181A" BorderBrush="#232428" BorderThickness="1"
+                    CornerRadius="12" Padding="14,10">
+              <StackPanel Spacing="6">
+                <TextBlock Text="DESKTOP OVERLAY" FontSize="10" FontWeight="SemiBold"
+                           LetterSpacing="1.2" Foreground="#6E7176"/>
+                <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto">
+                  <TextBlock Grid.Column="0" Text="Show overlay" FontSize="13"
+                             Foreground="#DFE0E3" VerticalAlignment="Center"/>
+                  <ToggleSwitch Grid.Column="1" Name="SettingOverlayCheck"
+                                OnContent="" OffContent="" Margin="8,-6,0,-6"/>
+                  <TextBlock Grid.Column="3" Text="Temps" FontSize="13"
+                             Foreground="#DFE0E3" VerticalAlignment="Center"/>
+                  <ToggleSwitch Grid.Column="4" Name="SettingShowTemps"
+                                OnContent="" OffContent="" Margin="8,-6,0,-6"/>
+                </Grid>
+                <Grid ColumnDefinitions="*,Auto">
+                  <TextBlock Grid.Column="0" Text="Icons instead of text" FontSize="13"
+                             Foreground="#DFE0E3" VerticalAlignment="Center"/>
+                  <ToggleSwitch Grid.Column="1" Name="SettingOverlayIcons"
+                                OnContent="" OffContent="" Margin="0,-6"/>
+                </Grid>
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <CheckBox Name="SettingShowFps" Content="FPS" Foreground="#DFE0E3" FontSize="12"
+                            ToolTip.Tip="Frame rate of the foreground game (uses a bit of CPU while enabled)"/>
+                  <CheckBox Name="SettingShowCpu" Content="CPU" Foreground="#DFE0E3" FontSize="12"/>
+                  <CheckBox Name="SettingShowGpu" Content="GPU" Foreground="#DFE0E3" FontSize="12"/>
+                  <CheckBox Name="SettingShowRam" Content="RAM" Foreground="#DFE0E3" FontSize="12"/>
+                  <CheckBox Name="SettingShowDisk" Content="Disk" Foreground="#DFE0E3" FontSize="12"/>
+                </StackPanel>
+              </StackPanel>
+            </Border>
+
+            <Border Background="#17181A" BorderBrush="#232428" BorderThickness="1"
+                    CornerRadius="12" Padding="14,10">
+              <StackPanel Spacing="6">
+                <TextBlock Text="THEME &amp; PERFORMANCE" FontSize="10" FontWeight="SemiBold"
+                           LetterSpacing="1.2" Foreground="#6E7176"/>
+                <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto">
+                  <TextBlock Grid.Column="0" Text="Potato mode" FontSize="13"
+                             Foreground="#DFE0E3" VerticalAlignment="Center"
+                             ToolTip.Tip="Removes all animations and effects to save CPU/RAM"/>
+                  <ToggleSwitch Grid.Column="1" Name="SettingPotato"
+                                OnContent="" OffContent="" Margin="8,-6,0,-6"/>
+                  <TextBlock Grid.Column="3" Text="Monotone" FontSize="13"
+                             Foreground="#DFE0E3" VerticalAlignment="Center"
+                             ToolTip.Tip="Single-tone theme — no accent colors"/>
+                  <ToggleSwitch Grid.Column="4" Name="SettingMonotone"
+                                OnContent="" OffContent="" Margin="8,-6,0,-6"/>
+                </Grid>
+              </StackPanel>
+            </Border>
+
+          </StackPanel>
+
+          <!-- Right column: Overlay appearance -->
+          <Border Grid.Column="1" Background="#17181A" BorderBrush="#232428"
+                  BorderThickness="1" CornerRadius="12" Padding="14,10"
+                  Margin="5,0,0,0" VerticalAlignment="Top">
+            <StackPanel Spacing="6">
+              <TextBlock Text="OVERLAY APPEARANCE" FontSize="10" FontWeight="SemiBold"
+                         LetterSpacing="1.2" Foreground="#6E7176"/>
+
+              <Grid ColumnDefinitions="*,*">
+                <StackPanel Grid.Column="0" Spacing="4" Margin="0,0,5,0">
+                  <TextBlock Text="Position" FontSize="11" Foreground="#9A9DA3"/>
+                  <ComboBox Name="SettingOverlayPos" FontSize="12" HorizontalAlignment="Stretch">
+                    <ComboBoxItem Content="Top right"/>
+                    <ComboBoxItem Content="Top center"/>
+                    <ComboBoxItem Content="Top left"/>
+                    <ComboBoxItem Content="Bottom right"/>
+                    <ComboBoxItem Content="Bottom center"/>
+                    <ComboBoxItem Content="Bottom left"/>
+                  </ComboBox>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Spacing="4" Margin="5,0,0,0">
+                  <TextBlock Text="Background" FontSize="11" Foreground="#9A9DA3"/>
+                  <ComboBox Name="SettingOverlayBg" FontSize="12" HorizontalAlignment="Stretch">
+                    <ComboBoxItem Content="Dark"/>
+                    <ComboBoxItem Content="Black"/>
+                    <ComboBoxItem Content="Slate"/>
+                    <ComboBoxItem Content="Invisible"/>
+                  </ComboBox>
+                </StackPanel>
+              </Grid>
+
+              <Grid ColumnDefinitions="*,*">
+                <StackPanel Grid.Column="0" Spacing="4" Margin="0,0,5,0">
+                  <TextBlock Text="Size" FontSize="11" Foreground="#9A9DA3"/>
+                  <ComboBox Name="SettingOverlaySize" FontSize="12" HorizontalAlignment="Stretch">
+                    <ComboBoxItem Content="Small"/>
+                    <ComboBoxItem Content="Medium"/>
+                    <ComboBoxItem Content="Large"/>
+                  </ComboBox>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Spacing="4" Margin="5,0,0,0">
+                  <TextBlock Text="Shape" FontSize="11" Foreground="#9A9DA3"/>
+                  <ComboBox Name="SettingCorner" FontSize="12" HorizontalAlignment="Stretch">
+                    <ComboBoxItem Content="Pill"/>
+                    <ComboBoxItem Content="Rounded"/>
+                    <ComboBoxItem Content="Rectangle"/>
+                  </ComboBox>
+                </StackPanel>
+              </Grid>
+
+              <Grid ColumnDefinitions="60,*">
+                <TextBlock Grid.Column="0" Text="Font" FontSize="11" Foreground="#9A9DA3"
+                           VerticalAlignment="Center"/>
+                <ComboBox Grid.Column="1" Name="SettingOverlayFont" FontSize="12"
+                          HorizontalAlignment="Stretch" Margin="4,0,0,0">
+                  <ComboBoxItem Content="Inter" FontFamily="Inter"/>
+                  <ComboBoxItem Content="Segoe UI" FontFamily="Segoe UI"/>
+                  <ComboBoxItem Content="Consolas" FontFamily="Consolas"/>
+                  <ComboBoxItem Content="Bahnschrift" FontFamily="Bahnschrift"/>
+                  <ComboBoxItem Content="Arial" FontFamily="Arial"/>
+                </ComboBox>
+              </Grid>
+
+              <Grid ColumnDefinitions="60,*,34">
+                <TextBlock Grid.Column="0" Text="Font size" FontSize="11" Foreground="#9A9DA3"
+                           VerticalAlignment="Center"/>
+                <Slider Grid.Column="1" Name="SettingFontSize" Minimum="8" Maximum="20"
+                        TickFrequency="0.5" IsSnapToTickEnabled="True"
+                        VerticalAlignment="Center" Margin="4,0"/>
+                <TextBlock Grid.Column="2" Name="SettingFontSizeValue" Text="10.5"
+                           FontSize="12" FontWeight="SemiBold" Foreground="#ECEDEF"
+                           VerticalAlignment="Center" HorizontalAlignment="Right"/>
+              </Grid>
+
+              <Grid ColumnDefinitions="60,*,34">
+                <TextBlock Grid.Column="0" Text="Opacity" FontSize="11" Foreground="#9A9DA3"
+                           VerticalAlignment="Center"/>
+                <Slider Grid.Column="1" Name="SettingOpacity" Minimum="0" Maximum="100"
+                        TickFrequency="5" IsSnapToTickEnabled="True"
+                        VerticalAlignment="Center" Margin="4,0"/>
+                <TextBlock Grid.Column="2" Name="SettingOpacityValue" Text="90%"
+                           FontSize="12" FontWeight="SemiBold" Foreground="#ECEDEF"
+                           VerticalAlignment="Center" HorizontalAlignment="Right"/>
+              </Grid>
+
+              <Grid ColumnDefinitions="60,*,34">
+                <TextBlock Grid.Column="0" Text="Top gap" FontSize="11" Foreground="#9A9DA3"
+                           VerticalAlignment="Center"
+                           ToolTip.Tip="Pixels from the top/bottom edge the overlay docks to"/>
+                <Slider Grid.Column="1" Name="SettingOffsetY" Minimum="0" Maximum="600"
+                        TickFrequency="2" IsSnapToTickEnabled="True"
+                        VerticalAlignment="Center" Margin="4,0"/>
+                <TextBlock Grid.Column="2" Name="SettingOffsetYValue" Text="16"
+                           FontSize="12" FontWeight="SemiBold" Foreground="#ECEDEF"
+                           VerticalAlignment="Center" HorizontalAlignment="Right"/>
+              </Grid>
+
+              <Grid ColumnDefinitions="60,*,34">
+                <TextBlock Grid.Column="0" Text="Side gap" FontSize="11" Foreground="#9A9DA3"
+                           VerticalAlignment="Center"
+                           ToolTip.Tip="Pixels from the left/right edge; not used for center positions"/>
+                <Slider Grid.Column="1" Name="SettingOffsetX" Minimum="0" Maximum="600"
+                        TickFrequency="2" IsSnapToTickEnabled="True"
+                        VerticalAlignment="Center" Margin="4,0"/>
+                <TextBlock Grid.Column="2" Name="SettingOffsetXValue" Text="16"
+                           FontSize="12" FontWeight="SemiBold" Foreground="#ECEDEF"
+                           VerticalAlignment="Center" HorizontalAlignment="Right"/>
+              </Grid>
+
+            </StackPanel>
+          </Border>
+
+        </Grid>
+      </DockPanel>
+    </Border>
+
+  </Panel>
+</Window>

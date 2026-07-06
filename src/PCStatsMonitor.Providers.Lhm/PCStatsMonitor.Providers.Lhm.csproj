@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>PCStatsMonitor.Providers.Lhm</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\PCStatsMonitor.Core\PCStatsMonitor.Core.csproj" />
+    <PackageReference Include="LibreHardwareMonitorLib" Version="0.9.7-pre705" />
+  </ItemGroup>
+</Project>

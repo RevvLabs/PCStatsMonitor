@@ -1,0 +1,51 @@
+Hardware: Gigabyte B860M EAGLE WIFI6 (Motherboard)
+  SubHardware: ITE IT8696E (SuperIO)
+    Sensor: 'Fan #1' | Type: Control | Value: 
+    Sensor: 'Fan #2' | Type: Control | Value: 
+    Sensor: 'Fan #3' | Type: Control | Value: 
+    Sensor: 'Fan #4' | Type: Control | Value: 
+    Sensor: 'Fan #5' | Type: Control | Value: 
+    Sensor: 'Fan #6' | Type: Control | Value: 
+    Sensor: 'Fan #1' | Type: Fan | Value: 2454.5454
+    Sensor: 'Fan #2' | Type: Fan | Value: 0
+    Sensor: 'Fan #3' | Type: Fan | Value: 0
+    Sensor: 'Fan #5' | Type: Fan | Value: 0
+Hardware: Intel Core Ultra 5 225F (Cpu)
+  Sensor: 'CPU Core #1' | Type: Load | Value: 15.266287
+  Sensor: 'CPU Core #2' | Type: Load | Value: 16.029531
+  Sensor: 'CPU Core #3' | Type: Load | Value: 12.860894
+  Sensor: 'CPU Core #4' | Type: Load | Value: 5.798584
+  Sensor: 'CPU Core #5' | Type: Load | Value: 4.0278254
+  Sensor: 'CPU Core #6' | Type: Load | Value: 14.0349865
+  Sensor: 'CPU Core #7' | Type: Load | Value: 15.242666
+  Sensor: 'CPU Core #8' | Type: Load | Value: 22.488838
+  Sensor: 'CPU Core #9' | Type: Load | Value: 8.309423
+  Sensor: 'CPU Core #10' | Type: Load | Value: 28.957928
+  Sensor: 'CPU Total' | Type: Load | Value: 14.301693
+  Sensor: 'CPU Core Max' | Type: Load | Value: 28.957928
+Hardware: Generic Memory (Memory)
+  Sensor: 'Memory' | Type: Load | Value: 65.46765
+  Sensor: 'Virtual Memory' | Type: Load | Value: 60.15421
+Hardware: NVIDIA GeForce RTX 5060 (GpuNvidia)
+  Sensor: 'GPU Fan' | Type: Fan | Value: 0
+  Sensor: 'GPU Fan' | Type: Control | Value: 0
+  Sensor: 'GPU Core' | Type: Load | Value: 0
+  Sensor: 'GPU Memory Controller' | Type: Load | Value: 3
+  Sensor: 'GPU Video Engine' | Type: Load | Value: 0
+  Sensor: 'GPU Bus' | Type: Load | Value: 46
+  Sensor: 'GPU Power' | Type: Load | Value: 8.987
+  Sensor: 'GPU Board Power' | Type: Load | Value: 9.634
+  Sensor: 'D3D 3D' | Type: Load | Value: 0.6100869
+  Sensor: 'D3D Video Decode' | Type: Load | Value: 0
+  Sensor: 'D3D Copy' | Type: Load | Value: 0
+  Sensor: 'D3D Copy' | Type: Load | Value: 0.0073539885
+  Sensor: 'D3D Security' | Type: Load | Value: 0
+  Sensor: 'D3D Video Encode' | Type: Load | Value: 0
+  Sensor: 'D3D OFA_0' | Type: Load | Value: 0
+  Sensor: 'D3D JPEG_Decode_0' | Type: Load | Value: 0
+  Sensor: 'D3D VR' | Type: Load | Value: 0
+  Sensor: 'D3D Copy' | Type: Load | Value: 0
+  Sensor: 'D3D Copy' | Type: Load | Value: 0
+  Sensor: 'D3D Copy' | Type: Load | Value: 0
+  Sensor: 'D3D Copy' | Type: Load | Value: 0
+  Sensor: 'GPU Memory' | Type: Load | Value: 21.78409

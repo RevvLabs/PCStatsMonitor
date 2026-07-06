@@ -1,0 +1,75 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!-- Build as net10.0-windows on Windows, net10.0 on Linux -->
+    <TargetFrameworks>net10.0-windows;net10.0</TargetFrameworks>
+    <!-- WinExe hides the console window on Windows; Exe is correct on Linux -->
+    <OutputType Condition="$(TargetFramework.Contains('-windows'))">WinExe</OutputType>
+    <OutputType Condition="!$(TargetFramework.Contains('-windows'))">Exe</OutputType>
+    <AssemblyName>PCStatsMonitor</AssemblyName>
+    <RootNamespace>PCStatsMonitor.App</RootNamespace>
+    <Nullable>enable</Nullable>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- Embedded exe icon — Task Manager, Explorer, taskbar, and the desktop shortcut (IconLocation = exe,0) all read this -->
+    <ApplicationIcon>Assets\tray-icon.ico</ApplicationIcon>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <!-- App formats exclusively with InvariantCulture; skipping ICU load cuts startup time and working set -->
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <!-- AOT-compile hot startup paths at publish time -->
+    <PublishReadyToRun>true</PublishReadyToRun>
+    <!-- Heap is tiny and update rate is 1 Hz; background GC thread is pure overhead here -->
+    <ConcurrentGarbageCollection>false</ConcurrentGarbageCollection>
+    <!-- Feature switches: strip runtime infrastructure this app never uses.
+         EventSource = ETW/EventPipe telemetry plumbing; MetadataUpdater = hot
+         reload support; SystemResourceKeys = full localized exception message
+         resources (errors become terse codes — logs still carry the type). -->
+    <EventSourceSupport>false</EventSourceSupport>
+    <MetadataUpdaterSupport>false</MetadataUpdaterSupport>
+    <UseSystemResourceKeys>true</UseSystemResourceKeys>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Trade a little GC throughput for a smaller heap; app idles at 1 Hz -->
+    <RuntimeHostConfigurationOption Include="System.GC.ConserveMemory" Value="9" />
+    <!-- Return freed segments to the OS instead of retaining them -->
+    <RuntimeHostConfigurationOption Include="System.GC.RetainVM" Value="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.2.7" />
+    <!-- Transitive dep of Avalonia; 0.20.0 has a known high-severity vulnerability (GHSA-xrw6-gwf8-vvr9) -->
+    <PackageReference Include="Tmds.DBus.Protocol" Version="0.21.3" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.2.7" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.2.7" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.2.7" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.0" />
+    <PackageReference Include="Serilog" Version="4.2.0" />
+    <PackageReference Include="Serilog.Sinks.Debug" Version="3.0.0" />
+    <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
+    <PackageReference Include="Serilog.Extensions.Logging" Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\PCStatsMonitor.Core\PCStatsMonitor.Core.csproj" />
+    <ProjectReference Include="..\..\src\PCStatsMonitor.Providers.Lhm\PCStatsMonitor.Providers.Lhm.csproj" />
+  </ItemGroup>
+  
+
+  <!-- Windows provider only when building the windows TFM -->
+  <ItemGroup Condition="$(TargetFramework.Contains('-windows'))">
+    <ProjectReference Include="..\..\src\PCStatsMonitor.Providers.Windows\PCStatsMonitor.Providers.Windows.csproj" />
+  </ItemGroup>
+
+  <!-- Linux provider only when building the non-windows TFM -->
+  <ItemGroup Condition="!$(TargetFramework.Contains('-windows'))">
+    <ProjectReference Include="..\..\src\PCStatsMonitor.Providers.Linux\PCStatsMonitor.Providers.Linux.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+  <AvaloniaResource Include="Assets\tray-icon.ico" />
+</ItemGroup>
+  <ItemGroup>
+    <None Include="app.manifest" />
+  </ItemGroup>
+</Project>

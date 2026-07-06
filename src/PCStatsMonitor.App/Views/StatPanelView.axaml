@@ -1,0 +1,89 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:PCStatsMonitor.App.Controls"
+             xmlns:vm="clr-namespace:PCStatsMonitor.App.ViewModels"
+             x:Class="PCStatsMonitor.App.Views.StatPanelView"
+             x:DataType="vm:StatPanelViewModel"
+             xmlns:converters="clr-namespace:PCStatsMonitor.App.Controls">
+
+  <!-- Static dashboard card: no hover styling (nothing here is clickable).
+       Identity comes from the accent dot beside the title + gauge arc; all
+       text wears ink tokens, never the series color. -->
+  <Border Background="#17181A"
+          CornerRadius="14"
+          BorderThickness="1"
+          BorderBrush="#232428"
+          Margin="7"
+          ClipToBounds="True">
+
+    <Grid RowDefinitions="Auto,*">
+
+      <!-- Header row: accent dot + title left, subtitle right -->
+      <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Margin="16,13,16,4">
+        <Ellipse Grid.Column="0" Width="8" Height="8"
+                 VerticalAlignment="Center"
+                 Margin="0,0,9,0"
+                 Fill="{Binding $parent[UserControl].Tag, Converter={x:Static converters:HexColorConverter.Instance}}"/>
+        <TextBlock Grid.Column="1"
+                   Text="{CompiledBinding Title}"
+                   FontSize="12" FontWeight="SemiBold"
+                   LetterSpacing="0.6"
+                   Foreground="#ECEDEF"
+                   VerticalAlignment="Center"/>
+        <TextBlock Grid.Column="2"
+                   Text="{CompiledBinding Subtitle}"
+                   FontSize="9"
+                   Foreground="#6E7176"
+                   TextWrapping="NoWrap"
+                   TextTrimming="CharacterEllipsis"
+                   MaxWidth="170"
+                   HorizontalAlignment="Right"
+                   VerticalAlignment="Center"/>
+      </Grid>
+
+      <!-- Body: gauge left, stats right -->
+      <Grid Grid.Row="1" ColumnDefinitions="0.38*,0.62*" Margin="16,0,16,13">
+
+        <!-- Circular gauge -->
+        <controls:CircularGauge Grid.Column="0"
+                                 TargetPercent="{CompiledBinding ProgressPercent}"
+                                 Caption="{CompiledBinding GaugeCaption}"
+                                 AccentColor="{CompiledBinding $parent[UserControl].Tag, Converter={x:Static converters:HexColorConverter.Instance}}"
+                                 Width="124" Height="124"
+                                 HorizontalAlignment="Center"
+                                 VerticalAlignment="Center"/>
+
+        <!-- 4 stat rows -->
+        <StackPanel Grid.Column="1"
+                    VerticalAlignment="Center"
+                    Spacing="8"
+                    Margin="14,0,0,0">
+
+          <Grid ColumnDefinitions="*,*">
+            <TextBlock Grid.Column="0" Text="{CompiledBinding Stat0Label}" FontSize="9" FontWeight="Medium" LetterSpacing="0.8" Foreground="#6E7176" VerticalAlignment="Center"/>
+            <TextBlock Grid.Column="1" Text="{CompiledBinding Stat0Value}" FontSize="12" FontWeight="SemiBold" Foreground="#ECEDEF" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+          </Grid>
+          <Border Height="1" Background="#1F2023"/>
+
+          <Grid ColumnDefinitions="*,*">
+            <TextBlock Grid.Column="0" Text="{CompiledBinding Stat1Label}" FontSize="9" FontWeight="Medium" LetterSpacing="0.8" Foreground="#6E7176" VerticalAlignment="Center"/>
+            <TextBlock Grid.Column="1" Text="{CompiledBinding Stat1Value}" FontSize="12" FontWeight="SemiBold" Foreground="#ECEDEF" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+          </Grid>
+          <Border Height="1" Background="#1F2023"/>
+
+          <Grid ColumnDefinitions="*,*">
+            <TextBlock Grid.Column="0" Text="{CompiledBinding Stat2Label}" FontSize="9" FontWeight="Medium" LetterSpacing="0.8" Foreground="#6E7176" VerticalAlignment="Center"/>
+            <TextBlock Grid.Column="1" Text="{CompiledBinding Stat2Value}" FontSize="12" FontWeight="SemiBold" Foreground="#ECEDEF" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+          </Grid>
+          <Border Height="1" Background="#1F2023"/>
+
+          <Grid ColumnDefinitions="*,*">
+            <TextBlock Grid.Column="0" Text="{CompiledBinding Stat3Label}" FontSize="9" FontWeight="Medium" LetterSpacing="0.8" Foreground="#6E7176" VerticalAlignment="Center"/>
+            <TextBlock Grid.Column="1" Text="{CompiledBinding Stat3Value}" FontSize="12" FontWeight="SemiBold" Foreground="#ECEDEF" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+          </Grid>
+
+        </StackPanel>
+      </Grid>
+    </Grid>
+  </Border>
+</UserControl>

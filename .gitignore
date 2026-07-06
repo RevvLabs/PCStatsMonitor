@@ -1,0 +1,54 @@
+# Build outputs
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+publish/
+dist/
+artifacts/
+
+# Build/publish leftovers
+*.pdb
+!**/runtimes/**/*.pdb
+
+# Visual Studio / Rider / VS Code
+.vs/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.DotSettings.user
+
+# Test results / coverage
+TestResults/
+[Cc]overage/
+*.trx
+*.coverage
+*.coveragexml
+
+# NuGet
+*.nupkg
+*.snupkg
+packages/
+project.lock.json
+
+# Logs and temp
+*.log
+*.tmp
+*.cache
+
+# Inno Setup compiler output (script itself stays tracked)
+installer/Output/
+
+# OS files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
+
+# Scratch/validation builds (build/Directory.Build.props stays tracked — imported by root props)
+build/*
+!build/Directory.Build.props
+
+# Claude Code workspace (machine-local notes and settings)
+.claude/
