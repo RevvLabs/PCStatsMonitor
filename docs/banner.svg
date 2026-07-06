@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="300" viewBox="0 0 1280 300" role="img" aria-label="PC Stats Monitor — real-time hardware monitoring for Windows">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0B0B0E"/>
+      <stop offset="1" stop-color="#131318"/>
+    </linearGradient>
+    <linearGradient id="arc" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#4A9EFF"/>
+      <stop offset="0.45" stop-color="#E4569B"/>
+      <stop offset="1" stop-color="#F5A623"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1280" height="300" fill="url(#bg)"/>
+  <rect x="0.5" y="0.5" width="1279" height="299" fill="none" stroke="#26262E" stroke-width="1"/>
+
+  <!-- gauge motif -->
+  <g transform="translate(1020,150)">
+    <circle r="104" fill="none" stroke="#1E1E24" stroke-width="14"/>
+    <path d="M 0,-104 A 104,104 0 1 1 -73.6,-73.6" fill="none" stroke="url(#arc)"
+          stroke-width="14" stroke-linecap="round" transform="rotate(135)"/>
+    <circle r="66" fill="#101014" stroke="#26262E" stroke-width="1"/>
+    <text y="-2" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif"
+          font-size="40" font-weight="700" fill="#FFFFFF">60</text>
+    <text y="26" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif"
+          font-size="13" font-weight="600" letter-spacing="3" fill="#7A7A85">FPS</text>
+  </g>
+
+  <!-- metric dots echoing the dashboard cards -->
+  <g font-family="Segoe UI, Arial, sans-serif" font-size="13" font-weight="600" letter-spacing="2">
+    <circle cx="76" cy="216" r="4.5" fill="#4A9EFF"/>
+    <text x="90" y="221" fill="#8A8A93">CPU</text>
+    <circle cx="156" cy="216" r="4.5" fill="#E4569B"/>
+    <text x="170" y="221" fill="#8A8A93">GPU</text>
+    <circle cx="238" cy="216" r="4.5" fill="#4ADE80"/>
+    <text x="252" y="221" fill="#8A8A93">MEMORY</text>
+    <circle cx="352" cy="216" r="4.5" fill="#F5A623"/>
+    <text x="366" y="221" fill="#8A8A93">STORAGE</text>
+    <circle cx="466" cy="216" r="4.5" fill="#FFFFFF"/>
+    <text x="480" y="221" fill="#8A8A93">FPS OVERLAY</text>
+  </g>
+
+  <!-- wordmark: mirrors the app titlebar treatment -->
+  <g font-family="Segoe UI, Arial, sans-serif">
+    <text x="74" y="128" font-size="46" font-weight="800" letter-spacing="6" fill="#FFFFFF">PC STATS
+      <tspan font-weight="300" fill="#6E6E78" letter-spacing="8"> MONITOR</tspan>
+    </text>
+    <text x="76" y="166" font-size="17" font-weight="400" fill="#9A9AA4">Real-time hardware monitoring for Windows — dashboard, in-game FPS overlay, tray app.</text>
+  </g>
+
+  <!-- live dot -->
+  <g>
+    <circle cx="76" cy="78" r="4" fill="#4ADE80"/>
+    <text x="88" y="83" font-family="Segoe UI, Arial, sans-serif" font-size="12"
+          font-weight="600" letter-spacing="3" fill="#4ADE80">LIVE</text>
+  </g>
+</svg>

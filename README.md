@@ -1,4 +1,6 @@
-# PC Stats Monitor
+<p align="center">
+  <img src="docs/banner.svg" alt="PC Stats Monitor — real-time hardware monitoring for Windows" width="100%">
+</p>
 
 Real-time hardware monitoring for Windows, built with [Avalonia UI](https://avaloniaui.net/).
 A circular-gauge dashboard, a click-through in-game overlay with live FPS, and a tray app —
@@ -27,6 +29,16 @@ all in one lightweight package.
 - Runs in the system tray; closing the window hides it, only tray "Exit" quits
 - Single-instance: launching again just brings the running instance forward
 - UAC-free autostart via a pre-authorized scheduled task (created by the installer)
+
+## Screenshots
+
+**Dashboard**
+
+![Dashboard — live circular gauges for CPU, GPU, memory and storage](docs/dashboard.png)
+
+**In-game overlay** — live FPS via ETW, click-through, always on top
+
+![Overlay pill showing FPS 60, CPU, GPU and RAM over a game](docs/overlay.png)
 
 ## Requirements
 
