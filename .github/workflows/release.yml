@@ -53,9 +53,11 @@ jobs:
 
           $bump = '${{ github.event.inputs.bump }}'
           if (-not $bump) { $bump = 'patch' }
-          $msg = git log -1 --pretty=%B
-          if ($msg -match '#major') { $bump = 'major' }
-          elseif ($msg -match '#minor') { $bump = 'minor' }
+          # Subject line ONLY — a #token mentioned in the commit body (e.g. docs
+          # about this very feature) must not trigger a bump
+          $subject = git log -1 --pretty=%s
+          if ($subject -match '#major') { $bump = 'major' }
+          elseif ($subject -match '#minor') { $bump = 'minor' }
 
           $next = switch ($bump) {
             'major' { [version]::new($cur.Major + 1, 0, 0) }
