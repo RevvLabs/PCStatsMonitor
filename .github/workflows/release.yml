@@ -1,14 +1,28 @@
 name: Build & Release
 
-# Every push to main: build, test, compile the installer, and publish it as a
-# GitHub Release tagged from the version in build/Directory.Build.props.
-# Bump that version to cut a new release; pushes with an unchanged version
-# update the existing release's assets.
+# Fully automatic versioned releases — no manual version bumping.
+# The latest v* git tag is the source of truth; every code push to main cuts
+# the next PATCH release (v1.1.0 → v1.1.1). Put #minor or #major anywhere in
+# the commit message to bump that part instead, or use the manual Run-workflow
+# button and pick the bump size. <Version> in Directory.Build.props is only a
+# dev-build placeholder — CI overrides it with the computed version, which is
+# what the in-app updater compares against release tags.
 
 on:
   push:
     branches: [main]
+    paths:
+      - "src/**"
+      - "installer/**"
+      - "build/**"
+      - ".github/workflows/release.yml"
   workflow_dispatch:
+    inputs:
+      bump:
+        description: "Version part to bump"
+        type: choice
+        options: [patch, minor, major]
+        default: patch
 
 permissions:
   contents: write
@@ -18,6 +32,8 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history — tags drive the version
 
       - uses: actions/setup-dotnet@v4
         with:
@@ -26,15 +42,31 @@ jobs:
       - name: Test
         run: dotnet test PCStatsMonitor.sln -c Release
 
-      - name: Publish app
-        run: dotnet publish src/PCStatsMonitor.App/PCStatsMonitor.App.csproj -c Release -f net10.0-windows -r win-x64 -o publish/win-x64
-
-      - name: Read version
+      - name: Compute next version
         id: ver
         shell: pwsh
         run: |
-          $v = ([xml](Get-Content build/Directory.Build.props)).Project.PropertyGroup.Version
-          "version=$v" >> $env:GITHUB_OUTPUT
+          $tags = git tag --list 'v*' |
+            ForEach-Object { try { [version]($_.TrimStart('v')) } catch { $null } } |
+            Where-Object { $_ } | Sort-Object -Descending
+          $cur = if ($tags) { $tags[0] } else { [version]'1.0.0' }
+
+          $bump = '${{ github.event.inputs.bump }}'
+          if (-not $bump) { $bump = 'patch' }
+          $msg = git log -1 --pretty=%B
+          if ($msg -match '#major') { $bump = 'major' }
+          elseif ($msg -match '#minor') { $bump = 'minor' }
+
+          $next = switch ($bump) {
+            'major' { [version]::new($cur.Major + 1, 0, 0) }
+            'minor' { [version]::new($cur.Major, $cur.Minor + 1, 0) }
+            default { [version]::new($cur.Major, $cur.Minor, [Math]::Max($cur.Build, 0) + 1) }
+          }
+          "current $cur -> $bump -> $next"
+          "version=$next" >> $env:GITHUB_OUTPUT
+
+      - name: Publish app
+        run: dotnet publish src/PCStatsMonitor.App/PCStatsMonitor.App.csproj -c Release -f net10.0-windows -r win-x64 -o publish/win-x64 -p:Version=${{ steps.ver.outputs.version }}
 
       - name: Compile installer
         shell: pwsh
