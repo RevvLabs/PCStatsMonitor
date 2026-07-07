@@ -121,6 +121,10 @@ public partial class MainWindow : Window
         {
             _settings.CloseBehavior = choice;
             _settings.Save();
+            // The settings page may be open underneath the prompt — its radios
+            // still show the pre-choice preference
+            if (SettingsOverlay.IsVisible)
+                PopulateSettings();
         }
         if (choice == CloseBehavior.MinimizeToTray)
             Hide();
@@ -248,6 +252,16 @@ public partial class MainWindow : Window
 
     private void OnSettingsClick(object? sender, RoutedEventArgs e)
     {
+        PopulateSettings();
+        SettingsOverlay.IsVisible = true;
+    }
+
+    /// <summary>Loads current settings into the page controls. Must run every
+    /// time the page becomes visible — a page left open across hide-to-tray or
+    /// a close-prompt choice holds stale radios, and CommitSettings would write
+    /// that stale state back over the user's saved preference.</summary>
+    private void PopulateSettings()
+    {
         _suppressSettingEvents = true;
         SettingTrayRadio.IsChecked = _settings.CloseBehavior == CloseBehavior.MinimizeToTray;
         SettingExitRadio.IsChecked = _settings.CloseBehavior == CloseBehavior.Exit;
@@ -280,7 +294,6 @@ public partial class MainWindow : Window
         // Reset a stale "Up to date"/"Check failed" label from a previous visit
         if (_pendingUpdate is null && !_updateBusy)
             SettingsUpdateButton.Content = "Check for updates";
-        SettingsOverlay.IsVisible = true;
     }
 
     private void OnSettingsDoneClick(object? sender, RoutedEventArgs e) =>
@@ -443,6 +456,10 @@ public partial class MainWindow : Window
         // Snapshots were skipped while hidden — show current data immediately
         if (_pump != null)
             _vm.Apply(_pump.Current);
+        // A settings page left open across hide-to-tray shows stale control
+        // state (and would commit it back on the next interaction)
+        if (SettingsOverlay.IsVisible)
+            PopulateSettings();
         Show();
         WindowState = WindowState.Normal;
         Activate();
