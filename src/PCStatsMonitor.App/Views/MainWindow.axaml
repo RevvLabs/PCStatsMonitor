@@ -340,6 +340,7 @@
                   <ComboBoxItem Content="Arial" FontFamily="Arial"/>
                   <ComboBoxItem Content="Cascadia Mono" FontFamily="Cascadia Mono, Consolas"/>
                   <ComboBoxItem Content="Verdana" FontFamily="Verdana"/>
+                  <ComboBoxItem Content="Tahoma" FontFamily="Tahoma"/>
                 </ComboBox>
               </Grid>
 

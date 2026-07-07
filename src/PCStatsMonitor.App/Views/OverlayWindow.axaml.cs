@@ -141,7 +141,7 @@ public partial class OverlayWindow : Window
     // Order MUST mirror the SettingOverlayFont ComboBox items in MainWindow.axaml.
     // Cascadia Mono ships with Windows 11 only — the Consolas fallback covers Win10.
     private static readonly string[] FontOptions =
-        { "Inter", "Segoe UI", "Consolas", "Bahnschrift", "Arial", "Cascadia Mono, Consolas", "Verdana" };
+        { "Inter", "Segoe UI", "Consolas", "Bahnschrift", "Arial", "Cascadia Mono, Consolas", "Verdana", "Tahoma" };
 
 
     private void ApplyStyle()
