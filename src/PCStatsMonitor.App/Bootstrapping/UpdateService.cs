@@ -29,6 +29,11 @@ public sealed class UpdateService
     private const string UninstallKey =
         @"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{B7E7A3D1-4C22-4E8B-9A67-PCSTATSMON01}_is1";
 
+    /// <summary>CLI switch that puts the app into updater mode — the staged new
+    /// exe is launched with this + the install dir + the outgoing process id,
+    /// shows the themed progress window, and swaps the files itself.</summary>
+    public const string ApplyUpdateArg = "--apply-update";
+
     /// <summary>Assembly version comes from &lt;Version&gt; in build/Directory.Build.props.</summary>
     public static Version CurrentVersion { get; } =
         typeof(UpdateService).Assembly.GetName().Version ?? new Version(0, 0, 0);
@@ -108,16 +113,88 @@ public sealed class UpdateService
         string? staged = FindStagedUpdate();
         if (staged is null)
             return false;
-        LaunchSwapScript(staged);
+        LaunchUpdater(staged);
         return true;
     }
 
-    /// <summary>"Restart now": spawn the swap script, then the caller exits the app.</summary>
+    /// <summary>"Restart now": launch the themed updater, then the caller exits.</summary>
     public void RestartToApply()
     {
         string? staged = FindStagedUpdate();
         if (staged is not null)
-            LaunchSwapScript(staged);
+            LaunchUpdater(staged);
+    }
+
+    /// <summary>
+    /// Launches the staged (new) exe in updater mode: it shows the progress
+    /// window, waits for this process to exit, copies its files over the
+    /// install, and relaunches. Running from the staging dir means the install
+    /// dir's files aren't locked by the updater. Falls back to the silent cmd
+    /// script if the staged exe can't be started.
+    /// </summary>
+    private static void LaunchUpdater(string stagedDir)
+    {
+        string stagedExe = Path.Combine(stagedDir, "PCStatsMonitor.exe");
+        string installDir = AppContext.BaseDirectory.TrimEnd('\\');
+        try
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = stagedExe,
+                // installDir + outgoing pid; quoted because the path has spaces
+                Arguments = $"{ApplyUpdateArg} \"{installDir}\" {Environment.ProcessId}",
+                UseShellExecute = false,
+                WorkingDirectory = stagedDir,
+            });
+        }
+        catch
+        {
+            LaunchSwapScript(stagedDir);
+        }
+    }
+
+    /// <summary>The staging root — the updater removes it after a successful swap.</summary>
+    public static string StageRootPath => StageRoot;
+
+    /// <summary>Relaunches the installed copy elevated via the launcher task
+    /// (no UAC), falling back to a direct start for dev builds.</summary>
+    public static void RelaunchInstalled(string installDir)
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = "schtasks.exe",
+                Arguments = $"/run /tn {LauncherTask}",
+                UseShellExecute = false,
+                CreateNoWindow = true,
+            })?.WaitForExit(4000);
+        }
+        catch { }
+
+        // Fall back to a direct launch when the task isn't registered (dev build)
+        if (!IsInstalledCopyRunning())
+        {
+            try
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = Path.Combine(installDir, "PCStatsMonitor.exe"),
+                    UseShellExecute = false,
+                    WorkingDirectory = installDir,
+                });
+            }
+            catch { }
+        }
+    }
+
+    private static bool IsInstalledCopyRunning()
+    {
+        try
+        {
+            return Process.GetProcessesByName("PCStatsMonitor").Length > 0;
+        }
+        catch { return false; }
     }
 
     /// <summary>Installer fallback for releases that carry no zip asset.

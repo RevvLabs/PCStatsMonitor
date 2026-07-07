@@ -1,0 +1,75 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="PCStatsMonitor.App.Views.UpdaterWindow"
+        Title="Updating PC Stats Monitor"
+        Width="460" Height="280"
+        SystemDecorations="None"
+        CanResize="False"
+        ShowInTaskbar="True"
+        Topmost="True"
+        WindowStartupLocation="CenterScreen"
+        Background="Transparent"
+        TransparencyLevelHint="Transparent"
+        FontFamily="Inter, Segoe UI"
+        RenderOptions.EdgeMode="Antialias"
+        UseLayoutRounding="True">
+
+  <!-- Outer margin gives the drop shadow room to render -->
+  <Border Margin="20"
+          Background="#141416"
+          BorderBrush="#2A2B2F"
+          BorderThickness="1"
+          CornerRadius="16"
+          BoxShadow="0 18 60 0 #B0000000">
+    <Grid RowDefinitions="Auto,*,Auto" Margin="34,30,34,28">
+
+      <!-- Wordmark -->
+      <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="9"
+                  HorizontalAlignment="Center">
+        <Ellipse Width="8" Height="8" VerticalAlignment="Center">
+          <Ellipse.Fill>
+            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+              <GradientStop Color="#3987E5" Offset="0"/>
+              <GradientStop Color="#D55181" Offset="1"/>
+            </LinearGradientBrush>
+          </Ellipse.Fill>
+        </Ellipse>
+        <TextBlock Text="PC STATS" FontSize="12" FontWeight="Bold"
+                   LetterSpacing="2.5" Foreground="#ECEDEF" VerticalAlignment="Center"/>
+        <TextBlock Text="MONITOR" FontSize="12" FontWeight="Normal"
+                   LetterSpacing="2.5" Foreground="#6E7176" VerticalAlignment="Center"/>
+      </StackPanel>
+
+      <!-- Center: headline + status -->
+      <StackPanel Grid.Row="1" VerticalAlignment="Center" Spacing="8">
+        <TextBlock Name="HeadlineText" Text="Updating"
+                   FontSize="21" FontWeight="SemiBold" Foreground="#ECEDEF"
+                   HorizontalAlignment="Center"/>
+        <TextBlock Name="StatusText" Text="Preparing update…"
+                   FontSize="12.5" Foreground="#9A9DA3"
+                   HorizontalAlignment="Center"/>
+      </StackPanel>
+
+      <!-- Progress -->
+      <StackPanel Grid.Row="2" Spacing="9">
+        <Border Name="BarTrack" Height="8" CornerRadius="4"
+                Background="#1F2023" HorizontalAlignment="Stretch"
+                ClipToBounds="True">
+          <Border Name="BarFill" Width="0" HorizontalAlignment="Left"
+                  CornerRadius="4">
+            <Border.Background>
+              <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
+                <GradientStop Color="#3987E5" Offset="0"/>
+                <GradientStop Color="#D55181" Offset="1"/>
+              </LinearGradientBrush>
+            </Border.Background>
+          </Border>
+        </Border>
+        <TextBlock Name="PercentText" Text="0%"
+                   FontSize="11" FontWeight="SemiBold" Foreground="#6E7176"
+                   HorizontalAlignment="Right"/>
+      </StackPanel>
+
+    </Grid>
+  </Border>
+</Window>
