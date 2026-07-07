@@ -6,9 +6,20 @@ namespace PCStatsMonitor.App;
 sealed class Program
 {
     [STAThread]
-    public static void Main(string[] args) =>
+    public static void Main(string[] args)
+    {
+        // Discord-style pending update: if a newer version was downloaded and
+        // staged last session, apply it now instead of starting stale — the
+        // swap script waits for this process to exit, patches the install
+        // directory, and relaunches the updated app.
+        if (UpdateService.TryApplyPendingUpdate())
+            return;
+
+        UpdateService.SyncInstalledVersionRegistry();
+
         BuildAvaloniaApp()
             .StartWithClassicDesktopLifetime(args);
+    }
 
     public static AppBuilder BuildAvaloniaApp()
     {

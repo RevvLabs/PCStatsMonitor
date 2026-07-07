@@ -117,8 +117,41 @@ public sealed class AppSettings
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
         "PCStatsMonitor", "settings.json");
 
+    // The installer's uninstall-first upgrade wipes %LocalAppData%\PCStatsMonitor,
+    // so an in-app update stashes settings in %TEMP% and Load() restores them on
+    // the first start of the new version.
+    private static string BackupPath => Path.Combine(
+        Path.GetTempPath(), "PCStatsMonitor-settings-backup.json");
+
+    /// <summary>Called by UpdateService right before handing off to the installer.</summary>
+    public static void BackupForUpdate()
+    {
+        try
+        {
+            if (File.Exists(FilePath))
+                File.Copy(FilePath, BackupPath, overwrite: true);
+        }
+        catch
+        {
+            // Losing settings across an update is annoying but never blocks it.
+        }
+    }
+
     public static AppSettings Load()
     {
+        try
+        {
+            if (!File.Exists(FilePath) && File.Exists(BackupPath))
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(FilePath)!);
+                File.Copy(BackupPath, FilePath);
+                File.Delete(BackupPath);
+            }
+        }
+        catch
+        {
+            // Restore is best-effort; fall through to a normal load.
+        }
         try
         {
             if (File.Exists(FilePath))

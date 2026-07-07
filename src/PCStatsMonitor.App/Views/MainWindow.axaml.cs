@@ -17,16 +17,23 @@ public partial class MainWindow : Window
     private readonly MainViewModel _vm;
     private readonly SensorPump? _pump;
     private readonly AppSettings _settings;
+    private readonly UpdateService? _updates;
 
-    public MainWindow(MainViewModel vm, SensorPump? pump = null, AppSettings? settings = null)
+    public MainWindow(MainViewModel vm, SensorPump? pump = null, AppSettings? settings = null,
+                      UpdateService? updates = null)
     {
         _vm       = vm;
         _pump     = pump;
         _settings = settings ?? new AppSettings();
+        _updates  = updates;
         DataContext = vm;
         InitializeComponent();
         WireSettingsEvents();
         ApplyTheme();
+
+        SettingsVersionText.Text = $"v{UpdateService.CurrentVersion.ToString(3)}";
+        if (_updates != null)
+            _ = AutoCheckForUpdatesAsync();
 
         // Wire snapshot updates from pump → UI thread
         if (_pump != null)
@@ -270,11 +277,166 @@ public partial class MainWindow : Window
         SettingOffsetYValue.Text = _settings.OverlayOffsetY.ToString();
         SettingOffsetXValue.Text = _settings.OverlayOffsetX.ToString();
         _suppressSettingEvents = false;
+        // Reset a stale "Up to date"/"Check failed" label from a previous visit
+        if (_pendingUpdate is null && !_updateBusy)
+            SettingsUpdateButton.Content = "Check for updates";
         SettingsOverlay.IsVisible = true;
     }
 
     private void OnSettingsDoneClick(object? sender, RoutedEventArgs e) =>
         SettingsOverlay.IsVisible = false;
+
+    /// <summary>Keeps the settings-page overlay toggle in sync when the Alt+M
+    /// global hotkey flips ShowOverlay while the page is open.</summary>
+    public void RefreshOverlayToggle()
+    {
+        if (!SettingsOverlay.IsVisible)
+            return;
+        _suppressSettingEvents = true;
+        SettingOverlayCheck.IsChecked = _settings.ShowOverlay;
+        _suppressSettingEvents = false;
+    }
+
+    // ── Updates (Discord-style) ────────────────────────────────────────────
+    // Zip release asset: downloaded + staged silently in the background, then
+    // the banner offers a one-click "Restart now" (dismissing is fine — the
+    // pending update applies automatically at the next launch). Releases
+    // without a zip fall back to the silent installer.
+
+    private UpdateInfo? _pendingUpdate;
+    private bool _updateStaged;
+    private bool _updateBusy;
+
+    private async Task AutoCheckForUpdatesAsync()
+    {
+        // Off the startup critical path; failures (offline, rate limit) are silent —
+        // the settings-page button remains as the manual retry
+        await Task.Delay(TimeSpan.FromSeconds(5));
+        try
+        {
+            var info = await _updates!.CheckAsync();
+            if (info is null)
+                return;
+            if (info.IsZipPatch)
+            {
+                // Silent background download; the user only ever sees "ready"
+                await _updates.DownloadAndStageAsync(info, progress: null);
+                Dispatcher.UIThread.Post(() => ShowUpdateReady(info));
+            }
+            else
+            {
+                Dispatcher.UIThread.Post(() => ShowUpdateAvailable(info));
+            }
+        }
+        catch { }
+    }
+
+    /// <summary>Zip patch staged — one restart applies it.</summary>
+    private void ShowUpdateReady(UpdateInfo info)
+    {
+        _pendingUpdate = info;
+        _updateStaged = true;
+        UpdateBannerText.Text = $"PC Stats Monitor {info.TagName} is ready — restart to apply";
+        UpdateBannerButton.Content = "Restart now";
+        UpdateBanner.IsVisible = true;
+        SettingsUpdateButton.Content = "Restart to update";
+    }
+
+    /// <summary>Installer fallback — needs an explicit download+install click.</summary>
+    private void ShowUpdateAvailable(UpdateInfo info)
+    {
+        _pendingUpdate = info;
+        UpdateBannerText.Text = $"PC Stats Monitor {info.TagName} is available";
+        UpdateBannerButton.Content = "Update now";
+        UpdateBanner.IsVisible = true;
+        SettingsUpdateButton.Content = $"Update to {info.TagName}";
+    }
+
+    private void OnUpdateNowClick(object? sender, RoutedEventArgs e) =>
+        _ = ApplyUpdateAsync();
+
+    private void OnUpdateDismissClick(object? sender, RoutedEventArgs e) =>
+        UpdateBanner.IsVisible = false;
+
+    /// <summary>Settings-page button: manual check while idle, apply once an
+    /// update is known.</summary>
+    private async void OnCheckUpdatesClick(object? sender, RoutedEventArgs e)
+    {
+        if (_updates is null || _updateBusy)
+            return;
+
+        if (_pendingUpdate != null)
+        {
+            await ApplyUpdateAsync();
+            return;
+        }
+
+        _updateBusy = true;
+        SettingsUpdateButton.Content = "Checking…";
+        try
+        {
+            var info = await _updates.CheckAsync();
+            if (info is null)
+            {
+                SettingsUpdateButton.Content = "Up to date";
+            }
+            else if (info.IsZipPatch)
+            {
+                var progress = new Progress<double>(p =>
+                    SettingsUpdateButton.Content = $"Downloading… {p * 100:0}%");
+                await _updates.DownloadAndStageAsync(info, progress);
+                ShowUpdateReady(info);
+            }
+            else
+            {
+                ShowUpdateAvailable(info);
+            }
+        }
+        catch
+        {
+            SettingsUpdateButton.Content = "Check failed — retry";
+        }
+        finally
+        {
+            _updateBusy = false;
+        }
+    }
+
+    private async Task ApplyUpdateAsync()
+    {
+        if (_updates is null || _pendingUpdate is null || _updateBusy)
+            return;
+
+        if (_updateStaged)
+        {
+            // Swap script waits for this process to exit, patches the install
+            // dir, and relaunches the updated app
+            _updates.RestartToApply();
+            ExitApp();
+            return;
+        }
+
+        // Installer fallback: download, hand off, exit so it can replace our files
+        _updateBusy = true;
+        void SetStatus(string text)
+        {
+            UpdateBannerButton.Content = text;
+            SettingsUpdateButton.Content = text;
+        }
+        var progress = new Progress<double>(p => SetStatus($"Downloading… {p * 100:0}%"));
+        try
+        {
+            string installer = await _updates.DownloadAsync(_pendingUpdate, progress);
+            SetStatus("Installing…");
+            _updates.LaunchInstaller(installer);
+            ExitApp();
+        }
+        catch
+        {
+            SetStatus("Update failed — retry");
+            _updateBusy = false;
+        }
+    }
 
     public void ShowAndActivate()
     {

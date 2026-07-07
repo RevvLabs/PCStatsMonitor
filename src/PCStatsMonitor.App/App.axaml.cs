@@ -28,6 +28,7 @@ public class App : Application
 #endif
     private IServiceProvider? _services;
     private Avalonia.Threading.DispatcherTimer? _trimTimer;
+    private GlobalHotkey? _hotkey;
 
     public override void Initialize() => AvaloniaXamlLoader.Load(this);
 
@@ -72,7 +73,7 @@ public class App : Application
 
             // Build UI
             var vm = new MainViewModel();
-            var window = new MainWindow(vm, _pump, settings);
+            var window = new MainWindow(vm, _pump, settings, new UpdateService());
             desktop.MainWindow = window;
 
             // Load shared icon once and assign to window (and pass to tray)
@@ -168,6 +169,20 @@ public class App : Application
             _guard.ShowWindowRequested += () =>
                 Avalonia.Threading.Dispatcher.UIThread.Post(window.ShowAndActivate);
 
+            // Alt+M toggles the overlay from anywhere (game focused included).
+            // Save() fires Changed → SyncOverlay + tray check refresh reuse the
+            // exact same path as the settings toggle.
+            if (OperatingSystem.IsWindows())
+            {
+                _hotkey = new GlobalHotkey(() =>
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                    {
+                        settings.ShowOverlay = !settings.ShowOverlay;
+                        settings.Save();
+                        window.RefreshOverlayToggle();
+                    }));
+            }
+
             // Periodic working-set maintenance: startup leaves ~150 MB of one-time
             // init pages resident, and re-touched pages creep back after a trim.
             // Trimmed pages land on the OS standby list, so re-faults are soft
@@ -212,6 +227,8 @@ public class App : Application
 #if WINDOWS
                 _fps?.Dispose(); // stops the ETW session — must not outlive the process
 #endif
+                if (OperatingSystem.IsWindows())
+                    _hotkey?.Dispose();
                 _tray?.Dispose();
                 _guard?.Dispose();
             };
