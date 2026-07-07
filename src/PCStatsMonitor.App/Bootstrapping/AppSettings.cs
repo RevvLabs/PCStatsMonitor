@@ -97,8 +97,9 @@ public sealed class AppSettings
     public bool OverlayIcons { get; set; }
 
     /// <summary>FPS readout of the foreground game (ETW present telemetry;
-    /// needs the app's admin rights, costs a trace session while enabled).</summary>
-    public bool OverlayShowFps { get; set; }
+    /// needs the app's admin rights, costs a trace session while enabled).
+    /// On by default — users who don't want the cost untick it.</summary>
+    public bool OverlayShowFps { get; set; } = true;
 
     /// <summary>Index into the overlay font list (Inter, Segoe UI, Consolas,
     /// Bahnschrift, Arial, Cascadia Mono, Verdana).</summary>
