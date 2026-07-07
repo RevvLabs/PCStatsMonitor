@@ -100,7 +100,8 @@ public sealed class AppSettings
     /// needs the app's admin rights, costs a trace session while enabled).</summary>
     public bool OverlayShowFps { get; set; }
 
-    /// <summary>Index into the overlay font list (Inter, Segoe UI, Consolas, Bahnschrift, Arial).</summary>
+    /// <summary>Index into the overlay font list (Inter, Segoe UI, Consolas,
+    /// Bahnschrift, Arial, Cascadia Mono, Verdana).</summary>
     public int OverlayFontIndex { get; set; }
 
     /// <summary>Raised after Save(); used to toggle the tray icon live. Events are

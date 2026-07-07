@@ -338,6 +338,8 @@
                   <ComboBoxItem Content="Consolas" FontFamily="Consolas"/>
                   <ComboBoxItem Content="Bahnschrift" FontFamily="Bahnschrift"/>
                   <ComboBoxItem Content="Arial" FontFamily="Arial"/>
+                  <ComboBoxItem Content="Cascadia Mono" FontFamily="Cascadia Mono, Consolas"/>
+                  <ComboBoxItem Content="Verdana" FontFamily="Verdana"/>
                 </ComboBox>
               </Grid>
 
