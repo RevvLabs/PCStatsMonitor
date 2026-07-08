@@ -87,6 +87,11 @@ public sealed class AppSettings
     /// <summary>Pixel gap from the left/right screen edge; ignored for center positions.</summary>
     public int OverlayOffsetX { get; set; } = 16;
 
+    /// <summary>Which monitor the overlay docks to — index into the screen list
+    /// (0 = first/primary). Out-of-range (monitor unplugged) falls back to primary.
+    /// Lets multi-monitor users park the HUD on an external display.</summary>
+    public int OverlayMonitorIndex { get; set; }
+
     /// <summary>Kills all animations (gauge spring, glow pass) for weak machines.</summary>
     public bool PotatoMode { get; set; }
 

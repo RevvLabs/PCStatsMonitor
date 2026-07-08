@@ -245,7 +245,13 @@ public partial class OverlayWindow : Window
     /// position setting changes while the overlay is open.</summary>
     public void Reposition()
     {
-        var screen = Screens.Primary ?? (Screens.All.Count > 0 ? Screens.All[0] : null);
+        // Dock to the user-chosen monitor; fall back to primary when the index is
+        // stale (monitor unplugged / resolution reshuffle).
+        var all = Screens.All;
+        int monIdx = _settings?.OverlayMonitorIndex ?? 0;
+        var screen = (monIdx >= 0 && monIdx < all.Count)
+            ? all[monIdx]
+            : (Screens.Primary ?? (all.Count > 0 ? all[0] : null));
         if (screen is null) return;
         var area = screen.WorkingArea;
         double scale = RenderScaling;

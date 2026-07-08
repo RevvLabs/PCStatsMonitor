@@ -146,6 +146,11 @@ public partial class MainWindow : Window
     /// change so the user sees the overlay update live; Done only closes.</summary>
     private void WireSettingsEvents()
     {
+        // Sidebar nav — switches the visible page; not a setting, so no commit
+        NavGeneral.IsCheckedChanged    += (_, _) => UpdateSettingsPage();
+        NavOverlay.IsCheckedChanged    += (_, _) => UpdateSettingsPage();
+        NavAppearance.IsCheckedChanged += (_, _) => UpdateSettingsPage();
+
         SettingTrayRadio.IsCheckedChanged  += (_, _) => CommitSettings();
         SettingExitRadio.IsCheckedChanged  += (_, _) => CommitSettings();
         SettingAskRadio.IsCheckedChanged   += (_, _) => CommitSettings();
@@ -153,6 +158,7 @@ public partial class MainWindow : Window
         SettingOverlayCheck.IsCheckedChanged += (_, _) => CommitSettings();
         SettingOverlayPos.SelectionChanged   += (_, _) => CommitSettings();
         SettingOverlaySize.SelectionChanged  += (_, _) => CommitSettings();
+        SettingOverlayMonitor.SelectionChanged += (_, _) => CommitSettings();
         SettingShowFps.IsCheckedChanged  += (_, _) => CommitSettings();
         SettingShowCpu.IsCheckedChanged  += (_, _) => CommitSettings();
         SettingShowGpu.IsCheckedChanged  += (_, _) => CommitSettings();
@@ -187,6 +193,14 @@ public partial class MainWindow : Window
         };
     }
 
+    /// <summary>Shows the settings page for the selected sidebar tab.</summary>
+    private void UpdateSettingsPage()
+    {
+        PageGeneral.IsVisible    = NavGeneral.IsChecked == true;
+        PageOverlay.IsVisible    = NavOverlay.IsChecked == true;
+        PageAppearance.IsVisible = NavAppearance.IsChecked == true;
+    }
+
     private void CommitSettings()
     {
         if (_suppressSettingEvents)
@@ -211,6 +225,8 @@ public partial class MainWindow : Window
             _settings.OverlayPosition = (OverlayPosition)SettingOverlayPos.SelectedIndex;
         if (SettingOverlaySize.SelectedIndex >= 0)
             _settings.OverlaySize = (OverlaySize)SettingOverlaySize.SelectedIndex;
+        if (SettingOverlayMonitor.SelectedIndex >= 0)
+            _settings.OverlayMonitorIndex = SettingOverlayMonitor.SelectedIndex;
         _settings.OverlayShowFps  = SettingShowFps.IsChecked == true;
         _settings.OverlayShowCpu  = SettingShowCpu.IsChecked == true;
         _settings.OverlayShowGpu  = SettingShowGpu.IsChecked == true;
@@ -273,6 +289,7 @@ public partial class MainWindow : Window
         // ComboBox item orders mirror the OverlayPosition / OverlaySize enum orders
         SettingOverlayPos.SelectedIndex = (int)_settings.OverlayPosition;
         SettingOverlaySize.SelectedIndex = (int)_settings.OverlaySize;
+        PopulateMonitors();
         SettingShowFps.IsChecked  = _settings.OverlayShowFps;
         SettingShowCpu.IsChecked  = _settings.OverlayShowCpu;
         SettingShowGpu.IsChecked  = _settings.OverlayShowGpu;
@@ -304,6 +321,30 @@ public partial class MainWindow : Window
 
     /// <summary>Keeps the settings-page overlay toggle in sync when the Alt+M
     /// global hotkey flips ShowOverlay while the page is open.</summary>
+    /// <summary>Fills the monitor picker from the live display list; the row is
+    /// hidden entirely on single-monitor machines. Runs under _suppressSettingEvents
+    /// (called from PopulateSettings), so rebuilding items won't commit.</summary>
+    private void PopulateMonitors()
+    {
+        var all = Screens?.All;
+        int count = all?.Count ?? 0;
+        // Always show the row so the feature is discoverable; with one display it
+        // just lists that single monitor. Extra monitors appear when plugged in.
+        OverlayMonitorRow.IsVisible = count > 0;
+        if (count == 0)
+            return;
+
+        var labels = new System.Collections.Generic.List<string>(count);
+        for (int i = 0; i < count; i++)
+        {
+            var b = all![i].Bounds;
+            string tag = all[i].IsPrimary ? " (primary)" : string.Empty;
+            labels.Add($"Display {i + 1}{tag} — {b.Width}×{b.Height}");
+        }
+        SettingOverlayMonitor.ItemsSource = labels;
+        SettingOverlayMonitor.SelectedIndex = Math.Clamp(_settings.OverlayMonitorIndex, 0, count - 1);
+    }
+
     public void RefreshOverlayToggle()
     {
         if (!SettingsOverlay.IsVisible)
@@ -322,6 +363,12 @@ public partial class MainWindow : Window
     private UpdateInfo? _pendingUpdate;
     private bool _updateStaged;
     private bool _updateBusy;
+    // Progress<T>.Report posts to the UI thread asynchronously, so the final
+    // "100%" report can land AFTER the completion handler already set the button
+    // to "Restart to update" — clobbering it back to a stuck "Downloading… 100%".
+    // The download phase gates the progress text: cleared before the terminal
+    // state, a late-arriving report becomes a no-op.
+    private bool _downloadingProgress;
 
     private async Task AutoCheckForUpdatesAsync()
     {
@@ -398,9 +445,14 @@ public partial class MainWindow : Window
             }
             else if (info.IsZipPatch)
             {
+                _downloadingProgress = true;
                 var progress = new Progress<double>(p =>
-                    SettingsUpdateButton.Content = $"Downloading… {p * 100:0}%");
+                {
+                    if (_downloadingProgress)
+                        SettingsUpdateButton.Content = $"Downloading… {p * 100:0}%";
+                });
                 await _updates.DownloadAndStageAsync(info, progress);
+                _downloadingProgress = false;
                 ShowUpdateReady(info);
             }
             else
@@ -414,6 +466,7 @@ public partial class MainWindow : Window
         }
         finally
         {
+            _downloadingProgress = false;
             _updateBusy = false;
         }
     }
@@ -439,16 +492,23 @@ public partial class MainWindow : Window
             UpdateBannerButton.Content = text;
             SettingsUpdateButton.Content = text;
         }
-        var progress = new Progress<double>(p => SetStatus($"Downloading… {p * 100:0}%"));
+        _downloadingProgress = true;
+        var progress = new Progress<double>(p =>
+        {
+            if (_downloadingProgress)
+                SetStatus($"Downloading… {p * 100:0}%");
+        });
         try
         {
             string installer = await _updates.DownloadAsync(_pendingUpdate, progress);
+            _downloadingProgress = false;
             SetStatus("Installing…");
             _updates.LaunchInstaller(installer);
             ExitApp();
         }
         catch
         {
+            _downloadingProgress = false;
             SetStatus("Update failed — retry");
             _updateBusy = false;
         }
