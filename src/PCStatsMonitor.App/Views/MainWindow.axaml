@@ -115,6 +115,8 @@
                              DataContext="{CompiledBinding Memory}"
                              Tag="199E70"/>
 
+        <!-- STORAGE cell = drive carousel: one card per physical drive, cycled by
+             the pagination dots under the gauge (shown only when 2+ drives exist). -->
         <views:StatPanelView Name="StoPanel" Grid.Row="1" Grid.Column="1"
                              DataContext="{CompiledBinding Storage}"
                              Tag="C98500"/>

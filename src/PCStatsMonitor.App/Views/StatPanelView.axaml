@@ -44,14 +44,60 @@
       <!-- Body: gauge left, stats right -->
       <Grid Grid.Row="1" ColumnDefinitions="0.38*,0.62*" Margin="16,0,16,13">
 
-        <!-- Circular gauge -->
-        <controls:CircularGauge Grid.Column="0"
-                                 TargetPercent="{CompiledBinding ProgressPercent}"
-                                 Caption="{CompiledBinding GaugeCaption}"
-                                 AccentColor="{CompiledBinding $parent[UserControl].Tag, Converter={x:Static converters:HexColorConverter.Instance}}"
-                                 Width="124" Height="124"
-                                 HorizontalAlignment="Center"
-                                 VerticalAlignment="Center"/>
+        <!-- Gauge + storage-only carousel nav, stacked and centered so the nav
+             can never overlap the ring. The gauge is a touch smaller than a full
+             card's to leave a clean band for the nav; nav is hidden on the other
+             cards (HasCarousel false) and the gauge simply centers alone there. -->
+        <StackPanel Grid.Column="0"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Spacing="7">
+          <controls:CircularGauge TargetPercent="{CompiledBinding ProgressPercent}"
+                                   Caption="{CompiledBinding GaugeCaption}"
+                                   AccentColor="{CompiledBinding $parent[UserControl].Tag, Converter={x:Static converters:HexColorConverter.Instance}}"
+                                   Width="112" Height="112"
+                                   HorizontalAlignment="Center"/>
+
+          <!-- Drive-carousel nav pill: ‹ n / N › — only the STORAGE card sets
+               HasCarousel, so this stays hidden (zero height) on every other card. -->
+          <Border IsVisible="{CompiledBinding HasCarousel}"
+                  HorizontalAlignment="Center"
+                  Margin="0,0,0,3"
+                  Background="#1E2023"
+                  BorderBrush="#2A2C31"
+                  BorderThickness="1"
+                  CornerRadius="10"
+                  Padding="3,1">
+            <Border.Styles>
+              <Style Selector="Button.nav">
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="Padding" Value="7,2"/>
+                <Setter Property="CornerRadius" Value="7"/>
+                <Setter Property="Cursor" Value="Hand"/>
+              </Style>
+              <Style Selector="Button.nav:pointerover /template/ ContentPresenter">
+                <Setter Property="Background" Value="#2E3138"/>
+              </Style>
+              <Style Selector="Button.nav:pointerover TextBlock">
+                <Setter Property="Foreground" Value="#F2F3F5"/>
+              </Style>
+            </Border.Styles>
+            <StackPanel Orientation="Horizontal" Spacing="1" VerticalAlignment="Center">
+              <Button Classes="nav" Click="OnCarouselPrev" ToolTip.Tip="Previous drive">
+                <TextBlock Text="‹" FontSize="14" FontWeight="SemiBold" Foreground="#C5C8CD"/>
+              </Button>
+              <TextBlock Text="{CompiledBinding CarouselPosition}"
+                         FontSize="10.5" FontWeight="SemiBold"
+                         Foreground="#C5C8CD" LetterSpacing="0.5"
+                         MinWidth="34" TextAlignment="Center"
+                         VerticalAlignment="Center"/>
+              <Button Classes="nav" Click="OnCarouselNext" ToolTip.Tip="Next drive">
+                <TextBlock Text="›" FontSize="14" FontWeight="SemiBold" Foreground="#C5C8CD"/>
+              </Button>
+            </StackPanel>
+          </Border>
+        </StackPanel>
 
         <!-- 4 stat rows -->
         <StackPanel Grid.Column="1"

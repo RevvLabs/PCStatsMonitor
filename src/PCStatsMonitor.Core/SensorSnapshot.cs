@@ -14,7 +14,8 @@ public sealed record SensorSnapshot(
     HardwareIdentity Gpu,
     HardwareIdentity Memory,
     HardwareIdentity Storage,
-    ImmutableDictionary<MetricKind, double> Metrics)
+    ImmutableDictionary<MetricKind, double> Metrics,
+    ImmutableArray<DriveReading> Drives)
 {
     public static readonly SensorSnapshot Empty = new(
         0, 0,
@@ -22,7 +23,8 @@ public sealed record SensorSnapshot(
         HardwareIdentity.Unknown,
         HardwareIdentity.Unknown,
         HardwareIdentity.Unknown,
-        ImmutableDictionary<MetricKind, double>.Empty);
+        ImmutableDictionary<MetricKind, double>.Empty,
+        ImmutableArray<DriveReading>.Empty);
 
     public double Get(MetricKind kind, double fallback = 0.0) =>
         Metrics.TryGetValue(kind, out var v) ? v : fallback;

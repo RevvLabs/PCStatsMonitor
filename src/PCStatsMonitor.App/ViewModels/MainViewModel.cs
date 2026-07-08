@@ -9,6 +9,9 @@ public sealed class MainViewModel
     public StatPanelViewModel Memory  { get; } = new() { Title = "MEMORY",  Subtitle = "System Memory" };
     public StatPanelViewModel Storage { get; } = new() { Title = "STORAGE", Subtitle = "System Drive" };
 
+    /// <summary>Cycles the STORAGE card across every physical drive; renders into <see cref="Storage"/>.</summary>
+    public StorageCarouselViewModel StorageDrives { get; } = new();
+
     /// <summary>
     /// Called on the UI thread (marshaled by SnapshotSubscriber) with the latest snapshot.
     /// Diffs are handled inside StatPanelViewModel.Set — only changed properties raise events.
@@ -22,6 +25,6 @@ public sealed class MainViewModel
         SnapshotFormatter.ApplyCpu(Cpu, snap);
         SnapshotFormatter.ApplyGpu(Gpu, snap);
         SnapshotFormatter.ApplyMemory(Memory, snap);
-        SnapshotFormatter.ApplyStorage(Storage, snap);
+        StorageDrives.Apply(snap, Storage);
     }
 }

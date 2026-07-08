@@ -23,6 +23,7 @@ public sealed class SensorPump : IDisposable
     private readonly ISensorProvider[] _providers;
     private readonly ISensorProvider[] _threadSafeProviders;
     private readonly ISensorProvider[] _serialProviders;
+    private readonly IStorageInventory[] _inventoryProviders;
 
     private static readonly MetricKind[] AllMetricKinds = Enum.GetValues<MetricKind>();
 
@@ -80,6 +81,7 @@ public sealed class SensorPump : IDisposable
         _providers = providers.ToArray();
         _threadSafeProviders = _providers.Where(p => p.Capabilities.IsThreadSafe).ToArray();
         _serialProviders = _providers.Where(p => !p.Capabilities.IsThreadSafe).ToArray();
+        _inventoryProviders = _providers.OfType<IStorageInventory>().ToArray();
 
         _thread = new Thread(PumpLoop)
         {
@@ -212,11 +214,27 @@ public sealed class SensorPump : IDisposable
                     _emaTemp[kind] = builder[kind];
                 }
 
+                // Collect per-drive inventory — first provider with a non-empty list wins
+                var drives = ImmutableArray<DriveReading>.Empty;
+                foreach (var inv in _inventoryProviders)
+                {
+                    try
+                    {
+                        var list = inv.ReadDrives();
+                        if (!list.IsDefaultOrEmpty) { drives = list; break; }
+                    }
+                    catch (Exception ex)
+                    {
+                        _log.LogDebug(ex, "Storage inventory read failed");
+                    }
+                }
+
                 var snap = new SensorSnapshot(
                     tick,
                     DateTime.UtcNow.Ticks,
                     _cpuId, _gpuId, _memId, _stoId,
-                    builder.ToImmutable());
+                    builder.ToImmutable(),
+                    drives);
 
                 Volatile.Write(ref _current, snap);
                 SnapshotPublished?.Invoke(snap);

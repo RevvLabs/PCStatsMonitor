@@ -38,6 +38,8 @@ public static class ProviderFactory
             providers.Add(CreatePdhDiskActivity(services));
             // IOCTL fallback for SSD/NVMe temp when LHM can't read it
             providers.Add(CreateStorageTemp(services));
+            // WMI per-drive inventory — feeds the multi-drive carousel (SensorSnapshot.Drives)
+            providers.Add(CreateStorageInventory(services));
         }
         else // Linux
         {
@@ -129,6 +131,14 @@ public static class ProviderFactory
     private static ISensorProvider CreateStorageTemp(IServiceProvider s)
     {
         var type = Type.GetType("PCStatsMonitor.Providers.Windows.StorageTempProvider, PCStatsMonitor.Providers.Windows");
+        return type != null
+            ? (ISensorProvider)ActivatorUtilities.CreateInstance(s, type)
+            : NullProvider.Instance;
+    }
+
+    private static ISensorProvider CreateStorageInventory(IServiceProvider s)
+    {
+        var type = Type.GetType("PCStatsMonitor.Providers.Windows.StorageInventoryProvider, PCStatsMonitor.Providers.Windows");
         return type != null
             ? (ISensorProvider)ActivatorUtilities.CreateInstance(s, type)
             : NullProvider.Instance;
