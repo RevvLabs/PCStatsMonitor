@@ -159,11 +159,16 @@ public class App : Application
             }
             SyncOverlay();
 
+            // Reconcile the launcher task's logon trigger to the saved preference
+            // (heals any drift; no-ops when the task isn't installed).
+            StartupTask.Sync(settings.StartWithWindows);
+
             settings.Changed += () =>
             {
                 _tray?.SetEnabled(settings.CloseBehavior != CloseBehavior.Exit);
                 _tray?.RefreshOverlayCheck();
                 SyncOverlay();
+                StartupTask.Sync(settings.StartWithWindows);
             };
 
             _guard.ShowWindowRequested += () =>

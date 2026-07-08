@@ -202,8 +202,10 @@
             <Border Background="#17181A" BorderBrush="#232428" BorderThickness="1"
                     CornerRadius="12" Padding="14,10">
               <StackPanel Spacing="7">
-                <TextBlock Text="WHEN I CLOSE THE WINDOW" FontSize="10" FontWeight="SemiBold"
+                <TextBlock Text="GENERAL" FontSize="10" FontWeight="SemiBold"
                            LetterSpacing="1.2" Foreground="#6E7176"/>
+                <TextBlock Text="When I close the window" FontSize="11"
+                           Foreground="#9A9DA3"/>
                 <WrapPanel>
                   <RadioButton Name="SettingTrayRadio" GroupName="CloseBehavior"
                                Foreground="#DFE0E3" FontSize="12" Margin="0,0,10,0"
@@ -215,6 +217,13 @@
                                Foreground="#DFE0E3" FontSize="12"
                                Content="Ask every time"/>
                 </WrapPanel>
+                <Grid ColumnDefinitions="*,Auto">
+                  <TextBlock Grid.Column="0" Text="Start with Windows" FontSize="13"
+                             Foreground="#DFE0E3" VerticalAlignment="Center"
+                             ToolTip.Tip="Launch automatically at logon (elevated, no UAC prompt)"/>
+                  <ToggleSwitch Grid.Column="1" Name="SettingStartup"
+                                OnContent="" OffContent="" Margin="0,-6"/>
+                </Grid>
               </StackPanel>
             </Border>
 

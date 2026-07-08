@@ -149,6 +149,7 @@ public partial class MainWindow : Window
         SettingTrayRadio.IsCheckedChanged  += (_, _) => CommitSettings();
         SettingExitRadio.IsCheckedChanged  += (_, _) => CommitSettings();
         SettingAskRadio.IsCheckedChanged   += (_, _) => CommitSettings();
+        SettingStartup.IsCheckedChanged    += (_, _) => CommitSettings();
         SettingOverlayCheck.IsCheckedChanged += (_, _) => CommitSettings();
         SettingOverlayPos.SelectionChanged   += (_, _) => CommitSettings();
         SettingOverlaySize.SelectionChanged  += (_, _) => CommitSettings();
@@ -204,6 +205,7 @@ public partial class MainWindow : Window
         _settings.CloseBehavior = SettingTrayRadio.IsChecked == true ? CloseBehavior.MinimizeToTray
                                 : SettingExitRadio.IsChecked == true ? CloseBehavior.Exit
                                 : CloseBehavior.Ask;
+        _settings.StartWithWindows = SettingStartup.IsChecked == true;
         _settings.ShowOverlay = SettingOverlayCheck.IsChecked == true;
         if (SettingOverlayPos.SelectedIndex >= 0)
             _settings.OverlayPosition = (OverlayPosition)SettingOverlayPos.SelectedIndex;
@@ -266,6 +268,7 @@ public partial class MainWindow : Window
         SettingTrayRadio.IsChecked = _settings.CloseBehavior == CloseBehavior.MinimizeToTray;
         SettingExitRadio.IsChecked = _settings.CloseBehavior == CloseBehavior.Exit;
         SettingAskRadio.IsChecked  = _settings.CloseBehavior == CloseBehavior.Ask;
+        SettingStartup.IsChecked = _settings.StartWithWindows;
         SettingOverlayCheck.IsChecked = _settings.ShowOverlay;
         // ComboBox item orders mirror the OverlayPosition / OverlaySize enum orders
         SettingOverlayPos.SelectedIndex = (int)_settings.OverlayPosition;

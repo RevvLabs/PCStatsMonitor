@@ -105,6 +105,11 @@ public sealed class AppSettings
     /// Bahnschrift, Arial, Cascadia Mono, Verdana).</summary>
     public int OverlayFontIndex { get; set; }
 
+    /// <summary>Launch automatically at Windows logon. Toggles the (already
+    /// installed, RunLevel=Highest) launcher task's logon trigger — the installer
+    /// creates it disabled, so this defaults to off. See <c>StartupTask</c>.</summary>
+    public bool StartWithWindows { get; set; }
+
     /// <summary>Raised after Save(); used to toggle the tray icon live. Events are
     /// never serialized, so no JsonIgnore is needed.</summary>
     public event Action? Changed;
@@ -118,6 +123,11 @@ public sealed class AppSettings
     private static string FilePath => Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
         "PCStatsMonitor", "settings.json");
+
+    // Last-known-good copy. Save() rotates the previous settings.json here via an
+    // atomic replace, so a torn write (power loss / crash mid-write) or a later
+    // corruption can be recovered from instead of silently resetting to defaults.
+    private static string LastGoodPath => FilePath + ".bak";
 
     // The installer's uninstall-first upgrade wipes %LocalAppData%\PCStatsMonitor,
     // so an in-app update stashes settings in %TEMP% and Load() restores them on
@@ -154,17 +164,24 @@ public sealed class AppSettings
         {
             // Restore is best-effort; fall through to a normal load.
         }
+        // Primary file first; on corruption fall back to the last-good backup
+        // before giving up and resetting — a transient bad write shouldn't wipe
+        // the user's real preferences.
+        return TryRead(FilePath) ?? TryRead(LastGoodPath) ?? new AppSettings();
+    }
+
+    private static AppSettings? TryRead(string path)
+    {
         try
         {
-            if (File.Exists(FilePath))
-                return JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(FilePath), JsonOptions)
-                       ?? new AppSettings();
+            if (File.Exists(path))
+                return JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(path), JsonOptions);
         }
         catch
         {
-            // Corrupt or unreadable settings must never block startup — fall back to defaults.
+            // Corrupt or unreadable — caller falls through to the next source.
         }
-        return new AppSettings();
+        return null;
     }
 
     public void Save()
@@ -172,7 +189,17 @@ public sealed class AppSettings
         try
         {
             Directory.CreateDirectory(Path.GetDirectoryName(FilePath)!);
-            File.WriteAllText(FilePath, JsonSerializer.Serialize(this, JsonOptions));
+            string json = JsonSerializer.Serialize(this, JsonOptions);
+
+            // Write to a temp file, then atomically swap it into place so a crash
+            // mid-write can never leave a half-written settings.json. File.Replace
+            // also rotates the previous good copy to LastGoodPath in one operation.
+            string tmp = FilePath + ".tmp";
+            File.WriteAllText(tmp, json);
+            if (File.Exists(FilePath))
+                File.Replace(tmp, FilePath, LastGoodPath, ignoreMetadataErrors: true);
+            else
+                File.Move(tmp, FilePath);
         }
         catch
         {
